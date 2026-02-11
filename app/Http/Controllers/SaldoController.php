@@ -12,7 +12,8 @@ class SaldoController extends Controller
      */
     public function index()
     {
-        $saldos = Saldo::all();
+        // Hanya menampilkan saldo milik user yang sedang login
+        $saldos = Saldo::where('user_id', auth()->id())->get();
         return view('saldo.index', compact('saldos'));
     }
 
@@ -21,8 +22,8 @@ class SaldoController extends Controller
      */
     public function create()
     {
-        $saldos = Saldo::all();
-        return view('saldo.create', compact('saldos'));
+        // Di halaman create saldo tidak perlu panggil Saldo::all()
+        return view('saldo.create');
     }
 
     /**
@@ -40,6 +41,11 @@ class SaldoController extends Controller
         ]);
 
         $saldos = new Saldo();
+        // =========================================================
+        // Simpan ID user agar saldo tidak nyampur ke orang lain
+        // =========================================================
+        $saldos->user_id = auth()->id();
+
         $saldos->nama_e_wallet = $request->nama_e_wallet;
         $saldos->total_saldo = $request->total_saldo;
         $saldos->save();
@@ -52,7 +58,8 @@ class SaldoController extends Controller
      */
     public function show(string $id)
     {
-        $saldos = Saldo::findOrFail($id);
+        // Gunakan where user_id agar user tidak bisa intip ID saldo orang lain lewat URL
+        $saldos = Saldo::where('user_id', auth()->id())->findOrFail($id);
         return view('saldo.show', compact('saldos'));
     }
 
@@ -61,7 +68,7 @@ class SaldoController extends Controller
      */
     public function edit(string $id)
     {
-        $saldos = Saldo::findOrFail($id);
+        $saldos = Saldo::where('user_id', auth()->id())->findOrFail($id);
         return view('saldo.edit', compact('saldos'));
     }
 
@@ -79,7 +86,8 @@ class SaldoController extends Controller
             'total_saldo.numeric' => 'Saldo harus berupa angka.',
         ]);
 
-        $saldos = Saldo::findOrFail($id);
+        $saldos = Saldo::where('user_id', auth()->id())->findOrFail($id);
+
         $saldos->nama_e_wallet = $request->nama_e_wallet;
         $saldos->total_saldo = $request->total_saldo;
         $saldos->save();
@@ -92,7 +100,7 @@ class SaldoController extends Controller
      */
     public function destroy(string $id)
     {
-        $saldos = Saldo::findOrFail($id);
+        $saldos = Saldo::where('user_id', auth()->id())->findOrFail($id);
         $saldos->delete();
 
         return redirect()->route('saldo.index')->with('success', 'Data berhasil dihapus');

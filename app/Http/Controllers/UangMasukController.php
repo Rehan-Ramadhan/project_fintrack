@@ -25,7 +25,7 @@ class UangMasukController extends Controller
      */
     public function create()
     {
-        $saldos = Saldo::all();
+        $saldos = Saldo::where('user_id', auth()->id())->get();
         return view('uang_masuk.create', compact('saldos'));
     }
 
@@ -66,7 +66,8 @@ class UangMasukController extends Controller
      */
     public function show(string $id)
     {
-        $uangMasuks = UangMasuk::findOrFail($id);
+        $uangMasuks = UangMasuk::where('user_id', auth()->id())->findOrFail($id);
+
         return view('uang_masuk.show', compact('uangMasuks'));
     }
 
@@ -76,7 +77,13 @@ class UangMasukController extends Controller
     public function edit(string $id)
     {
         $uangMasuks = UangMasuk::findOrFail($id);
-        $saldos = Saldo::all();
+
+        // Pastikan user tidak bisa edit data orang lain lewat URL
+        if ($uangMasuks->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $saldos = Saldo::where('user_id', auth()->id())->get();
         return view('uang_masuk.edit', compact('uangMasuks', 'saldos'));
     }
 

@@ -25,7 +25,7 @@ class UangKeluarController extends Controller
      */
     public function create()
     {
-        $saldos = Saldo::all();
+        $saldos = Saldo::where('user_id', auth()->id())->get();
         return view('uang_keluar.create', compact('saldos'));
     }
 
@@ -63,7 +63,8 @@ class UangKeluarController extends Controller
      */
     public function show(string $id)
     {
-        $uangKeluars = UangKeluar::findOrFail($id);
+        $uangKeluars = UangKeluar::where('user_id', auth()->id())->findOrFail($id);
+
         return view('uang_keluar.show', compact('uangKeluars'));
     }
 
@@ -72,8 +73,12 @@ class UangKeluarController extends Controller
      */
     public function edit(string $id)
     {
-        $uangKeluars = UangKeluar::findOrFail($id);
-        $saldos = Saldo::all();
+        // Pastikan data yang diedit adalah milik sendiri
+        $uangKeluars = UangKeluar::where('user_id', auth()->id())->findOrFail($id);
+
+        // Dropdown saldo hanya milik user yang login
+        $saldos = Saldo::where('user_id', auth()->id())->get();
+
         return view('uang_keluar.edit', compact('uangKeluars', 'saldos'));
     }
 
@@ -100,8 +105,9 @@ class UangKeluarController extends Controller
         }
 
         // 1. Reset saldo lama dulu (dikembalikan ke sebelum transaksi ini ada)
+        // Karena ini Uang Keluar, reset berarti saldo ditambah kembali (+)
         $saldos = Saldo::findOrFail($uangKeluars->id_saldo);
-        $saldos->total_saldo = $saldos->total_saldo - $uangKeluars->nominal;
+        $saldos->total_saldo = $saldos->total_saldo + $uangKeluars->nominal;
         $saldos->save();
 
         // 2. Update data uang keluar dengan data baru
@@ -111,9 +117,9 @@ class UangKeluarController extends Controller
         $uangKeluars->tanggal_keluar = $request->tanggal_keluar;
         $uangKeluars->save();
 
-        // 3. Tambahkan nominal baru ke saldo yang terpilih
+        // 3. Kurangi nominal baru dari saldo yang terpilih
         $saldo_baru = Saldo::findOrFail($request->id_saldo);
-        $saldo_baru->total_saldo = $saldo_baru->total_saldo + $request->nominal;
+        $saldo_baru->total_saldo = $saldo_baru->total_saldo - $request->nominal;
         $saldo_baru->save();
 
         return redirect()->route('uang_keluar.index')->with('success', 'Data berhasil diperbarui');
@@ -133,9 +139,9 @@ class UangKeluarController extends Controller
             abort(403, 'Anda tidak memiliki hak untuk menghapus data ini.');
         }
 
-        // 1. Kurangi total saldo (karena uang keluarnya dihapus/dibatalkan)
+        // 1. Tambahkan kembali total saldo (karena uang keluarnya dihapus/dibatalkan)
         $saldos = Saldo::findOrFail($uangKeluars->id_saldo);
-        $saldos->total_saldo = $saldos->total_saldo - $uangKeluars->nominal;
+        $saldos->total_saldo = $saldos->total_saldo + $uangKeluars->nominal;
         $saldos->save();
 
         // 2. Hapus data dari tabel uang_keluars

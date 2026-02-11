@@ -51,7 +51,7 @@
                 <tr>
                     <td>{{ $m->user->name ?? 'User Terhapus' }}</td>
                     <td>{{ $m->tanggal_masuk }}</td>
-                    <td>Rp {{ number_format($m->nominal, 0, ',', '.') }}</td>
+                    <td>+ Rp {{ number_format($m->nominal, 0, ',', '.') }}</td>
                     <td>{{ $m->keterangan }}</td>
                 </tr>
             @endforeach
@@ -73,7 +73,7 @@
                 <tr>
                     <td>{{ $k->user->name ?? 'User Terhapus' }}</td>
                     <td>{{ $k->tanggal_keluar }}</td>
-                    <td>Rp {{ number_format($k->nominal, 0, ',', '.') }}</td>
+                    <td>- Rp {{ number_format($k->nominal, 0, ',', '.') }}</td>
                     <td>{{ $k->keterangan }}</td>
                 </tr>
             @endforeach
